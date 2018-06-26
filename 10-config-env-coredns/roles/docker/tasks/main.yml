@@ -1,0 +1,90 @@
+---
+- name: 1.Install python-pip
+  yum:
+    name: '{{ item }}'
+    state: latest
+    update_cache: yes
+  with_items:
+    - python-pip
+
+- name: 2.Install Docker Python Api for Ansible
+  pip: name={{item}} state=present
+  with_items:
+    - docker-py
+  state: present
+
+- name: 3.create docker setup dirs.
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - '{{dockerConfDir}}'
+    - '{{dockerSystemdDir}}'
+
+- name: 4.Template http-proxy.conf
+  template:
+    src: http-proxy.conf
+    dest: '{{dockerSystemdDir}}/http-proxy.conf'
+    owner: root
+    mode: 0644
+    force: yes
+  notify:
+    - restart docker
+
+- name: 5.Template https-proxy.conf
+  template:
+    src: https-proxy.conf
+    dest: '{{dockerSystemdDir}}/https-proxy.conf'
+    owner: root
+    mode: 0644
+    force: yes
+  notify:
+    - restart docker
+
+- name: 6.Template docker.service.j2
+  template:
+    src: docker.service.j2
+    dest: '/etc/systemd/system/multi-user.target.wants/docker.service'
+    owner: root
+    mode: 0644
+    force: yes
+  notify:
+    - restart docker
+
+
+
+- name: 7.Template daemon.json
+  template:
+    src: daemon.json.j2
+    dest: '{{ dockerConfDir }}/daemon.json'
+    force: yes
+  notify:
+    - restart docker
+
+- name: 8.Copy docker binaries to remote VMs
+  copy:
+    src: '{{ item }}'
+    dest: /tmp/{{ item }}
+    mode: 0644
+  with_items:
+    - docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch.rpm
+    - docker-ce-17.03.2.ce-1.el7.centos.x86_64.rpm
+
+- name: 9.Install Docker from binaries.
+  package:
+    name: '/tmp/{{ item }}'
+    state: present
+    update_cache: yes
+  with_items:
+    - docker-ce-selinux-17.03.2.ce-1.el7.centos.noarch.rpm
+    - docker-ce-17.03.2.ce-1.el7.centos.x86_64.rpm
+  # environment:
+  #   http_proxy: http://F6071805:Pwd6071805@172.20.124.254:8080
+  #   https_proxy: http://F6071805:Pwd6071805@172.20.124.254:8080
+
+- name: 10.Start docker service
+  systemd:
+    name: docker
+    state: started
+    daemon_reload: yes

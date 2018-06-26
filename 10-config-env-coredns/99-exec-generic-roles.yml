@@ -1,0 +1,6 @@
+- hosts: '{{hosts}}'
+  gather_facts: True
+  sudo: yes
+  remote_user: centos
+  roles:
+    - '{{role}}'

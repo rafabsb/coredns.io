@@ -1,0 +1,8 @@
+proxyUrl: proxy.lcl.rafabsb.me
+proxyPort: 3128
+mirrorUrl: 'mirror.lcl.rafabsb.'
+mirrorPort: 5550
+dockerNetwork: '192.168.6.1/24'
+no_proxy_domains: .iac.intranet.bb.com.br,.io.intranet.bb.com.br,.io.servicos.bb.com.br,.lcl.rafabsb.me,.rafabsb.me,.bb.com.br
+dockerConfDir: /etc/docker
+dockerSystemdDir: /etc/systemd/system/docker.service.d

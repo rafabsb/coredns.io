@@ -1,0 +1,6 @@
+coredns_version: 1.1.4
+coredns_bin: coredns_{{coredns_version}}_linux_amd64.tgz
+link_download: https://github.com/coredns/coredns/releases/download/v{{coredns_version}}/{{coredns_bin}}
+service_user: coredns
+service_group: coredns
+coredns_conf_dir: /etc/coredns

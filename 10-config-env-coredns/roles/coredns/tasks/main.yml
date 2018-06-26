@@ -1,0 +1,68 @@
+---
+- name: 1.Make sure we have a {{service_group}} group
+  group:
+    name: '{{item}}'
+    state: present
+  with_items:
+    - "{{service_group}}"
+
+- name: 2.Add the service user {{service_user}}
+  user:
+    name: "{{item}}"
+    generate_ssh_key: no
+    ssh_key_bits: 2048
+    # ssh_key_file: .ssh/id_rsa
+    shell: /sbin/nologin
+    groups: "{{service_group}}"
+  with_items:
+    - '{{service_user}}'
+
+- name: 3.create coredns conf dirs.
+  file:
+    path: "{{ item }}"
+    state: directory
+    mode: 0755
+  with_items:
+    - '{{coredns_conf_dir}}'
+
+- name: 2.Download CoreDNS.
+  get_url:
+    url: "{{link_download}}"
+    dest: "/tmp/{{coredns_bin}}"
+    owner: "{{service_user}}"
+    group: "{{service_group}}"
+    mode: 0755
+
+- name: 3.Extract {{coredns_bin}} downloaded into /usr/bin.
+  unarchive:
+    src: "/tmp/{{coredns_bin}}"
+    dest: "/usr/bin"
+    owner: root
+    group: root
+    remote_src: yes
+
+- name: 4.Template coredns service unit.
+  template:
+    src: coredns.tl.service
+    dest: /etc/systemd/system/coredns.service
+    owner: root
+    mode: 0644
+    force: yes
+  notify:
+    - restart coredns
+
+- name: 5.Template coredns service unit.
+  template:
+    src: Corefile.tl
+    dest: "{{coredns_conf_dir}}/Corefile"
+    owner: root
+    mode: 0644
+    force: yes
+  notify:
+    - restart coredns
+
+- name: 6.Start coredns service.
+  systemd:
+    name: coredns
+    state: started
+    daemon_reload: yes

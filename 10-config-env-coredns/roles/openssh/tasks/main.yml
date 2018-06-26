@@ -1,0 +1,26 @@
+---
+- name: 1.Update Openssh to latest version
+  yum:
+    name: '{{ item }}'
+    state: latest
+    update_cache: yes
+  with_items:
+    - openssh
+
+- name: 2.sshd config1
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    state: present
+    regexp: '^#AllowTcpForwarding yes'
+    line: 'AllowTcpForwarding yes'
+  notify:
+    - restart ssh
+
+- name: 3.sshd config2
+  lineinfile:
+    dest: /etc/ssh/sshd_config
+    state: present
+    regexp: '^#PermitTunnel yes'
+    line: 'PermitTunnel yes'
+  notify:
+    - restart ssh

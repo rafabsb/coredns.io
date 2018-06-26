@@ -1,0 +1,11 @@
+- hosts: '{{hosts}}'
+  gather_facts: True
+  sudo: yes
+  remote_user: centos
+  roles:
+    - admin-user
+    - epel-repository
+    - openssh
+    - docker
+    - etcd-docker
+    - coredns

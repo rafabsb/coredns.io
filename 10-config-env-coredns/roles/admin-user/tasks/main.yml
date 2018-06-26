@@ -1,0 +1,41 @@
+---
+- name: 1.Make sure we have a 'wheel' group
+  group:
+    name: '{{item}}'
+    state: present
+  with_items:
+    - docker
+    - wheel
+
+- name: 2.Allow 'wheel' group to have passwordless sudo
+  lineinfile:
+    dest: /etc/sudoers
+    state: present
+    regexp: '^%wheel'
+    line: '%wheel ALL=(ALL) NOPASSWD: ALL'
+    validate: 'visudo -cf %s'
+
+- name: 3.Add the user K8s install and Adm User
+  user:
+    name: "{{k8sadmuser}}"
+    generate_ssh_key: no
+    ssh_key_bits: 2048
+    # ssh_key_file: .ssh/id_rsa
+    shell: /bin/bash
+    groups: systemd-journal,wheel,adm,docker
+
+- name: 4.Set Authorized Keys for K8s install and Adm User
+  authorized_key:
+    user: "{{k8sadmuser}}"
+    state: present
+    key: '{{item}}'
+  with_items:
+    - '{{sshPublicKey}}'
+
+- name: 5.Set Authorized Keys for root User
+  authorized_key:
+    user: root
+    state: present
+    key: '{{item}}'
+  with_items:
+    - '{{sshPublicKey}}'
